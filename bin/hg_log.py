@@ -5,7 +5,7 @@ Get the log from a mercurial repository and save it in a code_swarm-readable
 XML-File.
 
 Most options are accessible via the command line, but within this script you can
-define a list of user names that will be replace with other names, which might 
+define a list of user names that will be replace with other names, which might
 become usefull if you have two different names and want them to be merged.
 
 @author: Stefan Scherfke
@@ -28,7 +28,7 @@ replace = {
 def parseArgs():
 	"""
 	Parse all command line options and arguments
-	
+
 	@return: a tuple with options and arguments
 	"""
 	parser = OptionParser(usage = '%prog [options] path/to/repo',
@@ -43,7 +43,7 @@ def parseArgs():
 					"Foo Bar <foo.bar@example.com" gets "Foo Bar"''')
 	parser.add_option('-u', '--user', default = True,
 			action = 'store_true', dest = 'useUser',
-			help = '''Use user as author (default):\n 
+			help = '''Use user as author (default):\n
 					"Foo Bar <foo.bar@example.com>" gets "foo"''')
 	(options, args) = parser.parse_args()
 	if len(args) != 1:
@@ -54,26 +54,26 @@ def getLog(repo, useUser):
 	"""
 	Call hg log -v (in a pythonic way) and save its output to a StringIO object,
 	so we can use it like a file object.
-	
+
 	The log data is formatted this way::
 		author
 		date
 		file1 file2 ... fileN
-		
+
 		author
 		date
 		file1 file2
-		
+
 		...
-	
+
 	@return: StringIO object with the log data
-	""" 
+	"""
 	# We don't want the output on std streams
 	output = StringIO.StringIO()
 	errors = StringIO.StringIO()
 	sys.stdout = output
 	sys.stderr = errors
-	
+
 	# Change the current working directory to the repo
 	oldCwd = os.getcwd()
 	os.chdir(repo)
@@ -81,29 +81,29 @@ def getLog(repo, useUser):
 		s = "person"
 		if useUser: s = "user"
 		args = ['log', '-v', '--template', '{author|%s}\n{date}\n{files}\n\n' % s]
-		mercurial.dispatch.dispatch(args)
+		mercurial.dispatch.dispatch(mercurial.dispatch.request(args))
 	finally:
 		sys.stdout = sys.__stdout__
 		sys.stderr = sys.__stderr__
-		
+
 	os.chdir(oldCwd)
-	
+
 	err = errors.getvalue()
 	if len(err) > 0:
 		print err
 		exit(1)
 	output.seek(0)
 	return output
-	
+
 def writeLogToXml(log, filename):
 	"""
 	Write the log data into a file.
-	
+
 	@param log: The log data
 	@type log:	StringIO
 	@param filename: The output filename
 	@type filename:	 string
-	""" 
+	"""
 	outfile = open(filename, 'w')
 	outfile.write('<?xml version="1.0"?>\n')
 	outfile.write('<file_events>\n')
@@ -131,7 +131,7 @@ def writeLogToXml(log, filename):
 			print 'Error: undifined state'
 	outfile.write('</file_events>\n\n')
 	outfile.close()
-	
+
 if __name__ == '__main__':
 	(options, args) = parseArgs()
 	log = getLog(args[0], options.useUser)
